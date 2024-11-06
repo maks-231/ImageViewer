@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class ImageViewer extends JFrame implements ActionListener {
+public class ImageViewer implements ActionListener {
     private JMenuBar menuBar;
     private JMenu menu, submenu;
     private JMenuItem menuItem;
@@ -29,10 +29,11 @@ public class ImageViewer extends JFrame implements ActionListener {
 
         frame.setSize(500, 500);
         frame.setVisible(true);
+        frame.show();
     }
 
     public static void main(String args[]) {
-        new ImageViewer().show();
+        new ImageViewer();
     }
 
     @Override
