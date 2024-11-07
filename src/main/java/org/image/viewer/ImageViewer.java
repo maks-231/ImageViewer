@@ -3,34 +3,25 @@ package org.image.viewer;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 
-public class ImageViewer implements ActionListener {
-    private static final String OPEN_COMMAND="Open";
+public class ImageViewer implements ActionListener, MouseWheelListener, MouseMotionListener {
+    private static final String OPEN_COMMAND = "Open";
 
     private JMenuBar menuBar;
-    private JMenu menu, submenu;
+    private JMenu menu;
     private JMenuItem menuItem;
-
     private JFrame frame;
-
-    private BufferedImage image;
     private ImageCanvas imageCanvas;
 
-    public ImageViewer () {
+    private int dragX = 0;
+    private int dragY = 0;
 
+    public ImageViewer() {
         menuBar = new JMenuBar();
-
-        // create a menu
         menu = new JMenu("File");
-
-        // create menuitems
         menuItem = new JMenuItem("Open");
 
         menuItem.setActionCommand(OPEN_COMMAND);
@@ -41,12 +32,12 @@ public class ImageViewer implements ActionListener {
         frame = new JFrame();
         frame.setJMenuBar(menuBar);
 
-        imageCanvas = new ImageCanvas(frame);
-        frame.add(imageCanvas);
-
+        imageCanvas = new ImageCanvas();
+        frame.add(imageCanvas).addMouseMotionListener(this);
         frame.setSize(500, 500);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.addMouseWheelListener(this);
         frame.show();
         frame.setLocationRelativeTo(null);
     }
@@ -63,7 +54,7 @@ public class ImageViewer implements ActionListener {
         }
     }
 
-    private void browseFiles(){
+    private void browseFiles() {
         final JFileChooser fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(false);
         FileNameExtensionFilter filter = new FileNameExtensionFilter("IMAGE FILES", "png", "jpg");
@@ -73,17 +64,47 @@ public class ImageViewer implements ActionListener {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File imageFile = new File(fileChooser.getSelectedFile().getAbsolutePath());
             try {
-                int width = frame.getWidth();
-                int height = frame.getHeight();
-                image = ImageIO.read(imageFile);
-                frame.remove(imageCanvas);
-                imageCanvas = new ImageCanvas(image, frame);
-                frame.add(imageCanvas);
-                frame.pack();
-                frame.setSize(width, height);
+                imageCanvas.setImage(ImageIO.read(imageFile));
             } catch (IOException e) {
                 System.out.println(e);
             }
         }
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        int zoom = imageCanvas.getZoom();
+        if (e.getWheelRotation() < 0) {
+            imageCanvas.setZoom(zoom + 10);
+        } else {
+            imageCanvas.setZoom(zoom - 10);
+        }
+        imageCanvas.repaint();
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        if (Math.abs(dragX - e.getX()) > 5 || Math.abs(dragY - e.getY()) > 5) {
+            if (e.getX() > dragX) {
+                imageCanvas.setDragX(imageCanvas.getDragX() + Math.abs(dragX - e.getX()));
+            } else {
+                imageCanvas.setDragX(imageCanvas.getDragX() - Math.abs(dragX - e.getX()));
+            }
+            if (e.getY() > dragY) {
+                imageCanvas.setDragY(imageCanvas.getDragY() + Math.abs(dragY - e.getY()));
+            } else {
+                imageCanvas.setDragY(imageCanvas.getDragY() - Math.abs(dragY - e.getY()));
+            }
+
+            dragX = e.getX();
+            dragY = e.getY();
+            imageCanvas.repaint();
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        dragX = e.getX();
+        dragY = e.getY();
     }
 }
